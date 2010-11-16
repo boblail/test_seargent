@@ -30,9 +30,9 @@ util = {
   //  html sanitizer 
   toStaticHTML: function(inputHtml) {
     inputHtml = inputHtml.toString();
-    return inputHtml.replace(/&/g, "&amp;")
-                    .replace(/</g, "&lt;")
-                    .replace(/>/g, "&gt;");
+    return inputHtml.replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
   }, 
 
   //pads n with zeros on the left,
@@ -180,7 +180,7 @@ function showAjaxLoader() {
 
 
 function onRunFail() {
-  App.debug("error connecting to server");
+  App.debug('error connecting to server');
   hideAjaxLoader();
 }
 
@@ -189,7 +189,7 @@ function onRunFail() {
 function onRunSuccess(session) {
   hideAjaxLoader();
   if(session.error) {
-    App.debug("error connecting: " + session.error);
+    App.debug('error connecting: ' + session.error);
   } else {
     
     // begin listening for test results
@@ -200,13 +200,13 @@ function onRunSuccess(session) {
 
 
 $(document).ready(function() {
-  $("#connectButton").click(function () {
+  $('#connectButton').click(function () {
     showAjaxLoader();
     $.ajax({
       cache: false,
-      type: "GET",
-      dataType: "json",
-      url: "/run",
+      type: 'POST',
+      dataType: 'json',
+      url: '/run',
       error: onRunFail,
       success: onRunSuccess
     });

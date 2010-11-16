@@ -7,6 +7,7 @@ var MESSAGE_BACKLOG = 200,
 
 var starttime = (new Date()).getTime(), // when the daemon started
     sys = require("sys"),
+    fs = require('fs'),
     mem = process.memoryUsage(),
     url = require("url"),
     qs = require("querystring"),
@@ -96,36 +97,59 @@ var channel = new function() {
 
 
 
-router.get("/observer", function(request, response) {
-  json = {
-    time: new Date().toString()
-  };
-  Mu.render('observer.html', json, {}, function(err, output) {
-    if (err) {
-      throw err;
-    }
-    var buffer = '';
-    output.addListener('data', function(c) {buffer += c; })
-          .addListener('end', function() {
-            response.writeHead(200, {
-              "Content-Type": "text/html",
-              "Content-Length": buffer.length
-            });
-            response.end(buffer);
-          });
+router.get("/", function(request, response) {
+  fs.readFile('./views/test.html', function(err, data) {
+    if(err) {throw err;}
+    var html = injectScript(data.toString());
+    response.writeHead(200, {
+      "Content-Type": "text/html",
+      "Content-Length": html.length
+    });
+    response.end(html);
   });
+  // json = {
+  //   time: new Date().toString()
+  // };
+  // Mu.render('observer.html', json, {}, function(err, output) {
+  //   if (err) {
+  //     throw err;
+  //   }
+  //   var buffer = '';
+  //   output.addListener('data', function(c) {buffer += c; })
+  //         .addListener('end', function() {
+  //           response.writeHead(200, {
+  //             "Content-Type": "text/html",
+  //             "Content-Length": buffer.length
+  //           });
+  //           response.end(buffer);
+  //         });
+  // });
 });
 
 
 
-router.get("/run", function(req, res) {
+var clientScript = '<script src="/js/client.js" type="text/javascript"></script>';
+function injectScript(html) {
+  return html.replace(/(<\s*\/\s*body\s*>)/i, (clientScript + '$1'));
+}
+
+
+
+router.post("/results", function(request, response) {
+  channel.appendMessage('results');
+  response.simpleJSON(200, {});
+});
+
+
+
+router.post("/run", function(request, response) {
   channel.appendMessage('run');
-  res.simpleJSON(200, {});
+  response.simpleJSON(200, {});
 });
 
 
 
-router.get("/recv", function (req, res) {
+router.get("/recv", function(req, res) {
   var since = qs.parse(url.parse(req.url).query).since;
   if(!since) {
     return res.simpleJSON(400, {error: "Must supply since parameter"});

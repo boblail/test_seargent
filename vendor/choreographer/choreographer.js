@@ -45,12 +45,16 @@ this.Router = function() {
     
     
     function routeAndStaticHandler(request, response) {
-      fileServer.serve(request, response, function(e) {
-        if(e && (e.status == 404)) {
-          sys.puts('[router] file not found: \"' + request.url + '\", routing...');
-          routerHandler(request, response);
-        }
-      });
+      if(request.method == 'GET') {
+        fileServer.serve(request, response, function(e) {
+          if(e && (e.status == 404)) {
+            // sys.puts('[router] file not found: \"' + request.url + '\", routing...');
+            routerHandler(request, response);
+          }
+        });
+      } else {
+        routerHandler(request, response);
+      }
     }
     
     
@@ -58,7 +62,7 @@ this.Router = function() {
       
       extendResponse(response);
       
-      var path    = parse(request.url).pathname,
+      var path   = parse(request.url).pathname,
          _routes = routes[request.method];
       for(var i=0, ii=_routes.length; i < ii; i++) {
         var route   =_routes[i],
