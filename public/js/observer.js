@@ -2,7 +2,7 @@ var App = {};
 
 var CONFIG = { debug: false
              , id: null    // set in onConnect
-             , last_message_time: 1
+             , last_message_time: (new Date()).getTime()
              };
 
 var starttime; // daemon start time
@@ -110,19 +110,14 @@ App.refresh = function() {
 // function's execution.
 App.longPoll = function(data) {
   if(transmission_errors > 2) {
-    App.showConnect();
+    hideAjaxLoader();
     return;
-  }
-  
-  if(data && data.rss) {
-    rss = data.rss;
-    App.updateRSS();
   }
   
   // process any updates we may have
   // data will be null on the first call of longPoll
   if(data && data.messages) {
-    for (var i = 0; i < data.messages.length; i++) {
+    for(var i=0, ii=data.messages.length; i<ii; i++) {
       var message = data.messages[i];
       
       // track oldest message so we only request newer messages from server
@@ -130,9 +125,9 @@ App.longPoll = function(data) {
         CONFIG.last_message_time = message.timestamp;
       }
       
-      // dispatch new messages to their appropriate handlers
+      //dispatch new messages to their appropriate handlers
       switch(message.type) {
-        case "refresh":
+        case "run":
           App.refresh();
           break;
         
@@ -146,27 +141,28 @@ App.longPoll = function(data) {
   
   
   // make another request
-  $.ajax({ cache: false
-         , type: "GET"
-         , url: "/recv"
-         , dataType: "json"
-         , data: { since: CONFIG.last_message_time, id: CONFIG.id }
-         , error: function () {
-             addMessage("", "long poll error. trying again...", new Date(), "error");
-             transmission_errors += 1;
-             // don't flood the servers on error, wait 10 seconds before retrying
-             setTimeout(longPoll, 10*1000);
-           }
-         , success: function (data) {
-             transmission_errors = 0;
-             // if everything went well, begin another request immediately
-             // the server will take a long time to respond
-             // how long? well, it will wait until there is another message
-             // and then it will return it to us and close the connection.
-             // since the connection is closed when we get data, we longPoll again
-             App.longPoll(data);
-           }
-         });
+  $.ajax({
+    cache: false,
+    type: "GET",
+    url: "/recv",
+    dataType: "json",
+    data: {since: CONFIG.last_message_time},
+    error: function() {
+       App.debug("long poll error. trying again...");
+       transmission_errors += 1;
+       // don't flood the servers on error, wait 10 seconds before retrying
+       setTimeout(App.longPoll, 10*1000);
+     },
+     success: function (data) {
+       transmission_errors = 0;
+       //if everything went well, begin another request immediately
+       //the server will take a long time to respond
+       //how long? well, it will wait until there is another message
+       //and then it will return it to us and close the connection.
+       //since the connection is closed when we get data, we longPoll again
+       App.longPoll(data);
+     }
+   });
 }
 
 
@@ -174,3 +170,10 @@ App.longPoll = function(data) {
 $(document).ready(function() {
   App.longPoll();
 });
+
+
+
+// //if we can, notify the server that we're going away.
+// $(window).unload(function () {
+//   jQuery.get("/part", {id: CONFIG.id}, function (data) { }, "json");
+// });
