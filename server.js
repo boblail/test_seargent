@@ -28,15 +28,11 @@ var channel = new function() {
   var messages  = [],
       callbacks = [];
   
-  this.appendMessage = function(type, json) {
-    json = json || {};
-    var message = {
-      type: type,
-      data: json,
-      timestamp: (new Date()).getTime()
-    };
-    
-    
+  
+  
+  function describeMessage(message) {
+    var type = message.type;
+    var json = message.data;
     var log = '[' + type + ']';
     var anyKeys = false;
     for(key in json) {
@@ -51,9 +47,20 @@ var channel = new function() {
     if(anyKeys) {
       log = log + ')';
     }
-    sys.puts(log);
+    return log;
+  }
+  
+  
+  
+  this.appendMessage = function(type, json) {
+    json = json || {};
+    var message = {
+      type: type,
+      data: json,
+      timestamp: (new Date()).getTime()
+    };
     
-    
+    sys.puts(describeMessage(message));
     messages.push(message);
     
     while(callbacks.length > 0) {
@@ -128,36 +135,44 @@ router.get("/", function(request, response) {
 
 
 
-var clientScript = '<script src="/js/client.js" type="text/javascript"></script>';
+var clientScript = '<script src="/js/messenger.js" type="text/javascript"></script><script src="/js/client.js" type="text/javascript"></script>';
 function injectScript(html) {
   return html.replace(/(<\s*\/\s*body\s*>)/i, (clientScript + '$1'));
 }
 
 
 
-router.post("/results", function(request, response) {
-  channel.appendMessage('results');
-  response.simpleJSON(200, {});
+router.post("/talk", function(request, response) {
+  var buffer = '';
+  request.addListener('data', function(chunk) {buffer += chunk});
+  request.addListener('end', function() {
+    var message = qs.parse(buffer);
+    var data = message.data || {};
+    data['user-agent'] = request.headers['user-agent'];
+    channel.appendMessage(message.type, data);
+    response.simpleJSON(200, {});
+  });
 });
 
 
 
-router.post("/run", function(request, response) {
-  channel.appendMessage('run');
-  response.simpleJSON(200, {});
-});
+// router.post("/run", function(request, response) {
+//   channel.appendMessage('run');
+//   response.simpleJSON(200, {});
+// });
 
 
 
-router.get("/recv", function(req, res) {
+router.get("/listen", function(req, res) {
   var since = qs.parse(url.parse(req.url).query).since;
   if(!since) {
+    sys.puts('<listen> since parameter missing');
     return res.simpleJSON(400, {error: "Must supply since parameter"});
   }
   
   since = parseInt(since, 10);
   channel.query(since, function(messages) {
-    res.simpleJSON(200, {messages: messages, rss: mem.rss});
+    res.simpleJSON(200, {messages: messages});
   });
 });
 

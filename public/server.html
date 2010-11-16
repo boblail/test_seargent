@@ -2,7 +2,8 @@
   <head>
     <link rel="stylesheet" href="/css/style.css" type="text/css"/>
     <script src="/js/jquery-1.4.4.min.js" type="text/javascript"></script>
-    <script src="/js/date_extensions.js" type="text/javascript"></script>
+    <script src="/js/mustache.js" type="text/javascript"></script>
+    <script src="/js/messenger.js" type="text/javascript"></script>
     <script src="/js/server.js" type="text/javascript"></script>
     <title>node chat</title>
   </head>
@@ -17,8 +18,8 @@
         </form>
       </div>
       <div id="loading"><p>loading</p></div>
-      <div id="results">
-      </div>
+      <ol id="results">
+      </ol>
       <!-- <div id="toolbar">
         <ul id="status">
           <li><a id="usersLink" href="#">5 users</a></li>
