@@ -1,6 +1,3 @@
-[submodule "vendor/choreographer"]
-	path = vendor/choreographer
-	url = git://github.com/laughinghan/choreographer.git
 [submodule "vendor/mu"]
 	path = vendor/mu
 	url = git://github.com/raycmorgan/Mu.git
