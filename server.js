@@ -134,33 +134,6 @@ setInterval(function () {
 
 
 
-// fu.listen(Number(process.env.PORT || PORT), HOST);
-
-// router.static([
-//   "/observer.html",
-//   "/server.html",
-//   "/css/style.css",
-//   "/js/date_extensions.js",
-//   "/js/observer.js",
-//   "/js/server.js",
-//   "/js/jquery-1.2.6.min.js"
-// ]);
-
-// var file = new static.Server('./public', {
-//   cache: false
-// });
-// 
-// 
-// router.get('/observer.html', file.serve);
-// router.get('/server.html', file.serve);
-// router.get('/css/style.css', file.serve);
-// router.get('/js/date_extensions.js', file.serve);
-// router.get('/js/observer.js', file.serve);
-// router.get('/js/server.js', file.serve);
-// router.get('/js/jquery-1.2.6.min.js', file.serve);
-// 
-
-
 router.get("/who", function(req, res) {
   var nicks = [];
   for(var id in sessions) {
