@@ -1,33 +1,29 @@
-HOST = null; // localhost
-PORT = 8000;
+    HOST            = null; // localhost
+    PORT            = 8000;
 var MESSAGE_BACKLOG = 200,
-    SESSION_TIMEOUT = 60 * 1000;
-
-
-
-var starttime = (new Date()).getTime(), // when the daemon started
+    SESSION_TIMEOUT = 60 * 1000,
+    
+    
+    starttime = (new Date()).getTime(), // when the daemon started
     sys = require("sys"),
     fs = require('fs'),
-    mem = process.memoryUsage(),
+    // mem = process.memoryUsage(),
     url = require("url"),
     qs = require("querystring"),
     http = require('http'),
     choreographer = require('./vendor/choreographer/choreographer'),
     router = new choreographer.Router(),
-    Mu = require('./vendor/mu/lib/mu');
+    clientScript = '<script src="/js/messenger.js" type="text/javascript"></script><script src="/js/client.js" type="text/javascript"></script>';
 
 
-Mu.templateRoot = './views';
 
-
-setInterval(function() {mem = process.memoryUsage();}, 10*1000); // every 10 seconds poll for the memory.
+// setInterval(function() {mem = process.memoryUsage();}, 10*1000); // every 10 seconds poll for the memory.
 
 
 
 var channel = new function() {
   var messages  = [],
       callbacks = [];
-  
   
   
   function describeMessage(message) {
@@ -51,7 +47,6 @@ var channel = new function() {
   }
   
   
-  
   this.appendMessage = function(type, json) {
     json = json || {};
     var message = {
@@ -73,7 +68,6 @@ var channel = new function() {
   };
   
   
-  
   this.query = function(since, callback) {
     var matching = [];
     for(var i=0, ii=messages.length; i < ii; i++) {
@@ -91,7 +85,6 @@ var channel = new function() {
   };
   
   
-  
   // clear old callbacks
   // they can hang around for at most 30 seconds.
   setInterval(function () {
@@ -105,7 +98,7 @@ var channel = new function() {
 
 
 router.get("/", function(request, response) {
-  fs.readFile('./views/test.html', function(err, data) {
+  fs.readFile('./tests/test.html', function(err, data) {
     if(err) {throw err;}
     var html = injectScript(data.toString());
     response.writeHead(200, {
@@ -114,28 +107,10 @@ router.get("/", function(request, response) {
     });
     response.end(html);
   });
-  // json = {
-  //   time: new Date().toString()
-  // };
-  // Mu.render('observer.html', json, {}, function(err, output) {
-  //   if (err) {
-  //     throw err;
-  //   }
-  //   var buffer = '';
-  //   output.addListener('data', function(c) {buffer += c; })
-  //         .addListener('end', function() {
-  //           response.writeHead(200, {
-  //             "Content-Type": "text/html",
-  //             "Content-Length": buffer.length
-  //           });
-  //           response.end(buffer);
-  //         });
-  // });
 });
 
 
 
-var clientScript = '<script src="/js/messenger.js" type="text/javascript"></script><script src="/js/client.js" type="text/javascript"></script>';
 function injectScript(html) {
   return html.replace(/(<\s*\/\s*body\s*>)/i, (clientScript + '$1'));
 }
@@ -153,13 +128,6 @@ router.post("/talk", function(request, response) {
     response.simpleJSON(200, {});
   });
 });
-
-
-
-// router.post("/run", function(request, response) {
-//   channel.appendMessage('run');
-//   response.simpleJSON(200, {});
-// });
 
 
 
