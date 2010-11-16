@@ -13,12 +13,10 @@ setInterval(function () {
 
 var sys = require("sys"),
     url = require("url"),
-    qs = require("querystring");
-var http = require('http');
-// var fu = require('./lib/fu.js');
-var static = require('./vendor/node-static/lib/node-static');
-var router = require('./vendor/choreographer/choreographer').router();
-
+    qs = require("querystring"),
+    http = require('http'),
+    choreographer = require('./vendor/choreographer/choreographer'),
+    router = new choreographer.Router();
 
 
 
@@ -148,19 +146,19 @@ setInterval(function () {
 //   "/js/jquery-1.2.6.min.js"
 // ]);
 
-var file = new static.Server('./public', {
-  cache: false
-});
-
-
-router.get('/observer.html', file.serve);
-router.get('/server.html', file.serve);
-router.get('/css/style.css', file.serve);
-router.get('/js/date_extensions.js', file.serve);
-router.get('/js/observer.js', file.serve);
-router.get('/js/server.js', file.serve);
-router.get('/js/jquery-1.2.6.min.js', file.serve);
-
+// var file = new static.Server('./public', {
+//   cache: false
+// });
+// 
+// 
+// router.get('/observer.html', file.serve);
+// router.get('/server.html', file.serve);
+// router.get('/css/style.css', file.serve);
+// router.get('/js/date_extensions.js', file.serve);
+// router.get('/js/observer.js', file.serve);
+// router.get('/js/server.js', file.serve);
+// router.get('/js/jquery-1.2.6.min.js', file.serve);
+// 
 
 
 router.get("/who", function(req, res) {
@@ -252,4 +250,4 @@ router.get("/send", function (req, res) {
 });
 
 
-http.createServer(router).listen(Number(process.env.PORT || PORT), HOST);
+http.createServer(router.handler({serveStatic: true})).listen(Number(process.env.PORT || PORT), HOST);
