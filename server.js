@@ -16,7 +16,10 @@ var sys = require("sys"),
     qs = require("querystring"),
     http = require('http'),
     choreographer = require('./vendor/choreographer/choreographer'),
-    router = new choreographer.Router();
+    router = new choreographer.Router(),
+    Mu = require('./vendor/mu/lib/mu');
+
+Mu.templateRoot = './views';
 
 
 
@@ -144,6 +147,28 @@ router.get("/who", function(req, res) {
   res.simpleJSON(200, { nicks: nicks
                       , rss: mem.rss
                       });
+});
+
+
+
+router.get("/observer", function(request, response) {
+  json = {
+    time: new Date().toString()
+  };
+  Mu.render('observer.html', json, {}, function(err, output) {
+    if (err) {
+      throw err;
+    }
+    var buffer = '';
+    output.addListener('data', function(c) {buffer += c; })
+          .addListener('end', function() {
+            response.writeHead(200, {
+              "Content-Type": "text/html",
+              "Content-Length": buffer.length
+            });
+            response.end(buffer);
+          });
+  });
 });
 
 
