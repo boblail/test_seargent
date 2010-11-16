@@ -11,10 +11,16 @@ setInterval(function () {
 }, 10*1000);
 
 
-var fu = require("./lib/fu"),
-    sys = require("sys"),
+var sys = require("sys"),
     url = require("url"),
     qs = require("querystring");
+var http = require('http');
+// var fu = require('./lib/fu.js');
+var static = require('./vendor/node-static/lib/node-static');
+var router = require('./vendor/choreographer/choreographer').router();
+
+
+
 
 var MESSAGE_BACKLOG = 200,
     SESSION_TIMEOUT = 60 * 1000;
@@ -130,24 +136,37 @@ setInterval(function () {
 
 
 
-fu.listen(Number(process.env.PORT || PORT), HOST);
+// fu.listen(Number(process.env.PORT || PORT), HOST);
+
+// router.static([
+//   "/observer.html",
+//   "/server.html",
+//   "/css/style.css",
+//   "/js/date_extensions.js",
+//   "/js/observer.js",
+//   "/js/server.js",
+//   "/js/jquery-1.2.6.min.js"
+// ]);
+
+var file = new static.Server('./public', {
+  cache: false
+});
+
+
+router.get('/observer.html', file.serve);
+router.get('/server.html', file.serve);
+router.get('/css/style.css', file.serve);
+router.get('/js/date_extensions.js', file.serve);
+router.get('/js/observer.js', file.serve);
+router.get('/js/server.js', file.serve);
+router.get('/js/jquery-1.2.6.min.js', file.serve);
 
 
 
-fu.get("/observer", fu.staticHandler("public/observer.html"));
-fu.get("/", fu.staticHandler("public/server.html"));
-fu.get("/css/style.css", fu.staticHandler("public/css/style.css"));
-fu.get("/js/date_extensions.js", fu.staticHandler("public/js/date_extensions.js"));
-fu.get("/js/observer.js", fu.staticHandler("public/js/observer.js"));
-fu.get("/js/server.js", fu.staticHandler("public/js/server.js"));
-fu.get("/js/jquery-1.2.6.min.js", fu.staticHandler("public/js/jquery-1.2.6.min.js"));
-
-
-
-fu.get("/who", function (req, res) {
+router.get("/who", function(req, res) {
   var nicks = [];
-  for (var id in sessions) {
-    if (!sessions.hasOwnProperty(id)) continue;
+  for(var id in sessions) {
+    if(!sessions.hasOwnProperty(id)) continue;
     var session = sessions[id];
     nicks.push(session.nick);
   }
@@ -158,7 +177,7 @@ fu.get("/who", function (req, res) {
 
 
 
-fu.get("/join", function (req, res) {
+router.get("/join", function (req, res) {
   var nick = qs.parse(url.parse(req.url).query).nick;
   if (nick == null || nick.length == 0) {
     res.simpleJSON(400, {error: "Bad nick."});
@@ -182,7 +201,7 @@ fu.get("/join", function (req, res) {
 
 
 
-fu.get("/part", function (req, res) {
+router.get("/part", function (req, res) {
   var id = qs.parse(url.parse(req.url).query).id;
   var session;
   if (id && sessions[id]) {
@@ -194,7 +213,7 @@ fu.get("/part", function (req, res) {
 
 
 
-fu.get("/recv", function (req, res) {
+router.get("/recv", function (req, res) {
   if (!qs.parse(url.parse(req.url).query).since) {
     res.simpleJSON(400, { error: "Must supply since parameter" });
     return;
@@ -216,7 +235,7 @@ fu.get("/recv", function (req, res) {
 
 
 
-fu.get("/send", function (req, res) {
+router.get("/send", function (req, res) {
   var id = qs.parse(url.parse(req.url).query).id;
   var text = qs.parse(url.parse(req.url).query).text;
   
@@ -231,3 +250,6 @@ fu.get("/send", function (req, res) {
   channel.appendMessage(session.nick, "msg", text);
   res.simpleJSON(200, { rss: mem.rss });
 });
+
+
+http.createServer(router).listen(Number(process.env.PORT || PORT), HOST);
